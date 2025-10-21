@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teddy - Your Intelligent AI Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #e0e5ec 0%, #c8d0e7 50%, #a5b4fc 100%);
+            color: #333;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        /* Intro Popup */
+        .intro-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .intro-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: popupAppear 0.8s ease forwards;
+        }
+
+        @keyframes popupAppear {
+            0% {
+                transform: scale(0.8) translateY(20px);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .orbit {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 140px;
+            height: 140px;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: orbit 10s linear infinite;
+        }
+
+        @keyframes orbit {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .popup-content h2 {
+            margin-bottom: 15px;
+            font-size: 28px;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-text {
+            margin-bottom: 25px;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .typing-animation {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid #6a11cb;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #6a11cb }
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-btn i {
+            margin-right: 8px;
+        }
+
+        /* Chat Bubble */
+        .chat-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .chat-bubble.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .chat-bubble:hover {
+            transform: scale(1.1);
+        }
+
+        /* Chat Window */
+        .chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 380px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            z-index: 998;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-window.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .status {
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            animation: messageAppear 0.3s ease;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            background: rgba(255, 255, 255, 0.15);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .thinking {
+            display: none;
+            align-items: center;
+            padding: 10px 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: dotPulse 1.5s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 20px;
+            padding: 12px 15px;
+            color: white;
+            resize: none;
+            max-height: 100px;
+            outline: none;
+        }
+
+        .chat-input textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .voice-btn, .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .voice-btn:hover, .send-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .voice-btn.listening {
+            background: #ff4d4d;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 77, 77, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+            }
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        body.light-mode .theme-toggle {
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+
+        body.light-mode .theme-toggle:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 20%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 30%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+
+        .floating-element:nth-child(4) {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 6s;
+        }
+
+        .floating-element:nth-child(5) {
+            top: 40%;
+            left: 5%;
+            animation-delay: 8s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-20px) rotate(120deg);
+            }
+            66% {
+                transform: translateY(10px) rotate(240deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-window {
+                width: calc(100% - 40px);
+                right: 20px;
+                bottom: 80px;
+                height: 60vh;
+            }
+            
+            .chat-bubble {
+                right: 20px;
+                bottom: 20px;
+            }
+            
+            .popup-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Floating Elements -->
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <!-- Intro Popup -->
+    <div class="intro-popup active">
+        <div class="popup-content">
+            <div class="avatar-container">
+                <div class="avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="orbit"></div>
+            </div>
+            <h2>Welcome to Teddy</h2>
+            <p class="intro-text">
+                <span class="typing-animation" id="welcomeMessage">Hello, I am Teddy, How can I help you today?</span>
+            </p>
+            <button class="start-btn" id="startBtn">
+                <i class="fas fa-play"></i> Begin Conversation
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Bubble -->
+    <div class="chat-bubble" id="chatBubble">
+        <i class="fas fa-comment-alt"></i>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div class="chat-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="chat-title">Teddy</div>
+            <div class="status"></div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai-message">
+                <span id="initialGreeting">Hello! I'm Teddy, your AI assistant. How can I help you today?</span>
+            </div>
+        </div>
+        <div class="thinking" id="thinkingIndicator" style="display: none;">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <span>Teddy is thinking...</span>
+        </div>
+        <div class="chat-input">
+            <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+            <button class="voice-btn" id="voiceBtn">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="send-btn" id="sendBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="logo-text">Teddy AI</div>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i> Dark Mode
+            </button>
+        </header>
+    </div>
+
+    <script>
+        // DOM Elements
+        const startBtn = document.getElementById('startBtn');
+        const chatBubble = document.getElementById('chatBubble');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        const introPopup = document.querySelector('.intro-popup');
+        const thinkingIndicator = document.getElementById('thinkingIndicator');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const initialGreeting = document.getElementById('initialGreeting');
+
+        // State variables
+        let isListening = false;
+        const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let speechSynthesis = window.speechSynthesis;
+        
+        // Set welcome messages based on time of day
+        function setWelcomeMessage() {
+            const currentHour = new Date().getHours();
+            let greeting = "Hello";
+            
+            if (currentHour < 12) {
+                greeting = "Good Morning";
+            } else if (currentHour < 17) {
+                greeting = "Good Afternoon";
+            } else {
+                greeting = "Good Evening";
+            }
+            
+            const fullMessage = `${greeting}, I am Teddy, How can I help you today?`;
+            welcomeMessage.textContent = fullMessage;
+            initialGreeting.textContent = `${greeting}! I'm Teddy, your AI assistant. How can I help you today?`;
+            
+            // Speak the welcome message
+            speakMessage(`${greeting}! I'm Teddy, your AI assistant. How can I help you today?`);
+        }
+
+        // Function to speak a message
+        function speakMessage(message) {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 0.8;
+            
+            // Try to use a pleasant voice if available
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice => 
+                voice.name.includes('Google') || 
+                voice.name.includes('Samantha') || 
+                voice.name.includes('Microsoft')
+            );
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // Initialize voice recognition if available
+        function initVoiceRecognition() {
+            if (!speechRecognition) {
+                console.log("Speech recognition not supported in this browser");
+                voiceBtn.style.display = 'none';
+                return;
+            }
+            
+            recognition = new speechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                messageInput.value = transcript;
+                toggleVoiceButton();
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                toggleVoiceButton();
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error", event.error);
+                isListening = false;
+                toggleVoiceButton();
+                addMessage("Sorry, I didn't catch that. Please try speaking again.", false);
+            };
+        }
+
+        // Voice button state management
+        function toggleVoiceButton() {
+            if (isListening) {
+                voiceBtn.classList.add('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+            } else {
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            }
+        }
+
+        // Start voice recognition
+        function startVoiceRecognition() {
+            if (!recognition) {
+                addMessage("Speech recognition is not supported in your browser. Please type your message instead.", false);
+                return;
+            }
+
+            try {
+                recognition.start();
+                isListening = true;
+                toggleVoiceButton();
+                addMessage("Listening...", false);
+            } catch (error) {
+                console.error("Speech recognition error:", error);
+                addMessage("Error starting voice recognition. Please try again.", false);
+            }
+        }
+
+        // Gemini API Configuration - REPLACE WITH YOUR API KEY
+        const GEMINI_API_KEY = "AIzaSyCcw3yN1DlCl9Kp0J9_Ke1sO7VJAP3qQvg"; // Get from https://ai.google.dev/
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        // Function to send message to Gemini API
+        async function sendMessageToGemini(message) {
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+                return "Please set up your Gemini API key first. Get it from https://ai.google.dev/ and replace 'YOUR_GEMINI_API_KEY_HERE' in the code.";
+            }
+
+            thinkingIndicator.style.display = 'flex';
+            
+            try {
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: message
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                thinkingIndicator.style.display = 'none';
+                
+                // Extract the AI's response text
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Unexpected response format from Gemini API");
+                }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                thinkingIndicator.style.display = 'none';
+                return `I'm sorry, I encountered an error: ${error.message}. Please check your API key and try again.`;
+            }
+        }
+
+        // Function to add a message to the chat
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Speak AI responses
+            if (!isUser) {
+                speakMessage(text);
+            }
+        }
+
+        // Function to handle sending a message
+        async function handleSendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message to UI
+            addMessage(message, true);
+            messageInput.value = '';
+
+            // Get and add AI response
+            const aiResponse = await sendMessageToGemini(message);
+            addMessage(aiResponse, false);
+        }
+
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.classList.toggle('light-mode', savedTheme === 'light');
+            updateThemeToggleIcon();
+        }
+
+        function updateThemeToggleIcon() {
+            const icon = themeToggle.querySelector('i');
+            if (document.body.classList.contains('light-mode')) {
+                icon.className = 'fas fa-moon';
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i> Dark Mode';
+            } else {
+                icon.className = 'fas fa-sun';
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i> Light Mode';
+            }
+        }
+
+        // Initialize particles.js
+        function initParticles() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: {
+                        value: 80,
+                        density: {
+                            enable: true,
+                            value_area: 800
+                        }
+                    },
+                    color: {
+                        value: "#ffffff"
+                    },
+                    shape: {
+                        type: "circle",
+                        stroke: {
+                            width: 0,
+                            color: "#000000"
+                        }
+                    },
+                    opacity: {
+                        value: 0.5,
+                        random: true,
+                        anim: {
+                            enable: true,
+                            speed: 1,
+                            opacity_min: 0.1,
+                            sync: false
+                        }
+                    },
+                    size: {
+                        value: 3,
+                        random: true,
+                        anim: {
+                            enable: true,
+                            speed: 2,
+                            size_min: 0.1,
+                            sync: false
+                        }
+                    },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: "#ffffff",
+                        opacity: 0.4,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 2,
+                        direction: "none",
+                        random: true,
+                        straight: false,
+                        out_mode: "out",
+                        bounce: false,
+                        attract: {
+                            enable: false,
+                            rotateX: 600,
+                            rotateY: 1200
+                        }
+                    }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: {
+                            enable: true,
+                            mode: "grab"
+                        },
+                        onclick: {
+                            enable: true,
+                            mode: "push"
+                        },
+                        resize: true
+                    },
+                    modes: {
+                        grab: {
+                            distance: 140,
+                            line_linked: {
+                                opacity: 1
+                            }
+                        },
+                        push: {
+                            particles_nb: 4
+                        }
+                    }
+                },
+                retina_detect: true
+            });
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', function() {
+            introPopup.classList.remove('active');
+            setTimeout(() => {
+                chatBubble.classList.add('active');
+                setTimeout(() => {
+                    chatWindow.classList.add('active');
+                }, 300);
+            }, 500);
+        });
+
+        chatBubble.addEventListener('click', function() {
+            chatWindow.classList.add('active');
+            chatBubble.classList.add('active');
+        });
+
+        sendBtn.addEventListener('click', handleSendMessage);
+
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        voiceBtn.addEventListener('click', function() {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                startVoiceRecognition();
+            }
+        });
+
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('light-mode');
+            const isLightMode = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+            updateThemeToggleIcon();
+        });
+
+        // Initialize the application
+        function init() {
+            initTheme();
+            initVoiceRecognition();
+            setWelcomeMessage();
+            initParticles();
+            
+            // Wait for voices to be loaded
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = setWelcomeMessage;
+            }
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
